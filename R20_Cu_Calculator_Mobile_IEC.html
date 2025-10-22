@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>R20,Cu Calculator — Mobile Friendly + IEC Check</title>
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    :root{
+      --bg:#0f172a; --panel:#0b1220; --muted:#9ca3af; --text:#e5e7eb;
+      --accent:#22d3ee; --ring:#38bdf8; --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html{height:100%}
+    body{
+      margin:0; font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial;
+      background:var(--bg); color:var(--text);
+      line-height:1.55;
+    }
+    .container{
+      max-width:980px; margin:0 auto; padding:20px 16px 40px;
+    }
+    header{position:sticky; top:0; z-index:10; background:rgba(15,23,42,.85); backdrop-filter:saturate(120%) blur(6px); border-bottom:1px solid rgba(255,255,255,.08)}
+    header .wrap{max-width:980px; margin:0 auto; padding:12px 16px}
+    h1{font-size:clamp(18px,4.5vw,28px); margin:0}
+    .badge{display:inline-block; font-size:12px; padding:4px 8px; margin-left:8px; border:1px solid rgba(255,255,255,.18); border-radius:999px; color:var(--muted)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px;
+    }
+    .grid{display:grid; gap:12px}
+    @media(min-width:720px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    label{font-weight:600; display:block; margin-bottom:6px}
+    .hint{font-size:12px; color:var(--muted)}
+    input, select{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
+      background:var(--panel); color:var(--text); font-size:16px; outline:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input:focus, select:focus{ border-color:var(--ring); box-shadow:0 0 0 4px rgba(56,189,248,.18) }
+    .btn{
+      width:100%; padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
+      font-weight:700; font-size:16px; cursor:pointer;
+      background:linear-gradient(180deg, #06b6d4, #0891b2); color:#001018;
+    }
+    .btn.secondary{background:linear-gradient(180deg, #334155, #1f2937); color:#e5e7eb}
+    .row{display:grid; gap:12px; grid-template-columns:1fr}
+    @media(min-width:720px){ .row{grid-template-columns:1fr 1fr} }
+    .out{margin-top:14px; padding:12px; border-radius:12px; background:var(--panel); border:1px dashed rgba(255,255,255,.18)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+    .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+    details{margin-top:10px; border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:10px; background:#0c1424}
+    summary{cursor:pointer; font-weight:700}
+    table{width:100%; border-collapse:collapse; margin-top:8px; font-size:14px}
+    th, td{padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.08); text-align:right}
+    th:first-child, td:first-child{text-align:left}
+    .footer{margin-top:18px; color:var(--muted); font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>R<sub>20,Cu</sub> Calculator <span class="badge">Mobile Optimized</span> <span class="badge">IEC Check</span></h1>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="card" aria-label="Inputs">
+      <div class="grid">
+        <div>
+          <label for="Rt">Rt — ค่าความต้านทานที่อุณหภูมิแวดล้อม (Ω)</label>
+          <input id="Rt" type="number" step="any" inputmode="decimal" placeholder="เช่น 3.812">
+          <div class="hint">ค่าที่วัดได้ของเส้นยาว (L + l) เมตร ณ t °C</div>
+        </div>
+        <div>
+          <label for="temp">t — อุณหภูมิแวดล้อม (°C)</label>
+          <input id="temp" type="number" step="any" inputmode="decimal" placeholder="เช่น 34">
+        </div>
+        <div>
+          <label for="L">L — ความยาว (m)</label>
+          <input id="L" type="number" step="any" inputmode="decimal" placeholder="เช่น 987">
+        </div>
+        <div>
+          <label for="lExtra">l — ความยาวเผื่อ (m)</label>
+          <input id="lExtra" type="number" step="any" inputmode="decimal" placeholder="เช่น 15">
+        </div>
+        <div>
+          <label for="material">วัสดุตัวนำ (เลือก k)</label>
+          <select id="material">
+            <option value="Cu">Copper (k = 0.00393)</option>
+            <option value="TinCu">Tin-Coated Copper (k = 0.00370)</option>
+            <option value="Al">Aluminium (k = 0.00403)</option>
+          </select>
+          <div class="hint">ใช้กำหนดค่า k และใช้เลือกคอลัมน์มาตรฐาน</div>
+        </div>
+        <div>
+          <label for="csArea">พื้นที่หน้าตัดตามมาตรฐาน (mm²)</label>
+          <select id="csArea"></select>
+          <div class="hint">ใช้เทียบกับค่ามาตรฐาน (IEC)</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="calcBtn">คำนวณ</button>
+        <button class="btn secondary" id="resetBtn" type="button">ล้างค่า</button>
+      </div>
+
+      <div class="out" id="result" style="display:none">
+        <div><strong>ผลลัพธ์:</strong></div>
+        <div style="margin-top:6px; font-size:18px">
+          R<sub>20,Cu</sub> = <span class="mono" id="r20Val">—</span> <span class="hint">Ω/km</span>
+        </div>
+
+        <details>
+          <summary>ดูวิธีคำนวณทีละขั้น</summary>
+          <div style="margin-top:8px">
+            <div>1) ปรับอุณหภูมิ: <span class="mono">Rt × 1/(1 + k (t − 20))</span></div>
+            <div class="hint mono" id="stepTemp">—</div>
+            <div style="margin-top:6px">2) ปรับความยาวเป็นต่อกิโลเมตร: <span class="mono">× 1000/(L + l)</span></div>
+            <div class="hint mono" id="stepLen">—</div>
+          </div>
+        </details>
+
+        <div id="iecBlock" style="margin-top:10px; display:none">
+          <hr style="border:none; border-top:1px solid rgba(255,255,255,.12); margin:10px 0">
+          <div><strong>เทียบค่ามาตรฐาน (IEC):</strong></div>
+          <div style="margin-top:6px">
+            <div>ขนาด <span class="mono" id="iecSize">—</span> mm² • ประเภท <span class="mono" id="iecMat">—</span></div>
+            <div>เกณฑ์สูงสุด: <span class="mono" id="iecLimit">—</span> Ω/km</div>
+            <div>คิดเป็นเปอร์เซ็นต์: <span class="mono" id="iecPct">—</span></div>
+            <div id="passMsg" style="margin-top:4px"></div>
+          </div>
+
+          <details>
+            <summary>ดูตารางมาตรฐานย่อ</summary>
+            <div style="max-height:260px; overflow:auto; margin-top:8px">
+              <table id="stdTable">
+                <thead>
+                  <tr><th>mm²</th><th>Cu</th><th>Tin-Cu</th><th>Al</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="footer">
+        หน่วยอินพุต: Rt เป็น Ω ของเส้นยาว (L+l) เมตรที่อุณหภูมิ t °C • ผลลัพธ์: Ω/km • เกณฑ์: R20 ต้อง ≤ ค่ามาตรฐาน
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ================= Standard Table (ตามที่ผู้ใช้ให้มา) =================
+    const STANDARD = [
+      {s:0.5,  Cu:36.0,   TinCu:36.7,  Al:null},
+      {s:0.75, Cu:24.5,   TinCu:24.8,  Al:null},
+      {s:1.0,  Cu:18.1,   TinCu:18.2,  Al:null},
+      {s:1.5,  Cu:12.1,   TinCu:12.2,  Al:null},
+      {s:2.5,  Cu:7.41,   TinCu:7.56,  Al:null},
+      {s:4,    Cu:4.61,   TinCu:4.70,  Al:null},
+      {s:6,    Cu:3.08,   TinCu:3.11,  Al:null},
+      {s:10,   Cu:1.83,   TinCu:1.84,  Al:3.08},
+      {s:16,   Cu:1.15,   TinCu:1.16,  Al:1.91},
+      {s:25,   Cu:0.727,  TinCu:0.734, Al:1.20},
+      {s:35,   Cu:0.524,  TinCu:0.529, Al:0.868},
+      {s:50,   Cu:0.387,  TinCu:0.391, Al:0.641},
+      {s:70,   Cu:0.268,  TinCu:0.270, Al:0.443},
+      {s:95,   Cu:0.193,  TinCu:0.195, Al:0.320},
+      {s:120,  Cu:0.153,  TinCu:0.154, Al:0.253},
+      {s:150,  Cu:0.124,  TinCu:0.126, Al:0.206},
+      {s:185,  Cu:0.0991, TinCu:0.100, Al:0.164},
+      {s:240,  Cu:0.0754, TinCu:0.0762,Al:0.125},
+      {s:300,  Cu:0.0601, TinCu:0.0607,Al:0.100},
+      {s:400,  Cu:0.0470, TinCu:0.0475,Al:0.0778},
+      {s:500,  Cu:0.0366, TinCu:0.0369,Al:0.0605},
+      {s:630,  Cu:0.0283, TinCu:0.0286,Al:0.0469},
+      {s:800,  Cu:0.0221, TinCu:0.0224,Al:0.0367},
+    ];
+
+    const kMap = { Cu:0.00393, TinCu:0.00370, Al:0.00403 };
+
+    const $ = (id)=>document.getElementById(id);
+
+    // Populate size dropdown & table
+    const csSel = $("csArea");
+    const tbody = document.querySelector("#stdTable tbody");
+    STANDARD.forEach(r=>{
+      const opt = document.createElement("option");
+      opt.value = r.s; opt.textContent = r.s.toString();
+      csSel.appendChild(opt);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.s}</td><td>${r.Cu??"-"}</td><td>${r.TinCu??"-"}</td><td>${r.Al??"-"}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Helpers
+    const fmt = (x, d=6)=>!isFinite(x)? "—" : Number(x).toFixed(d);
+    function getStd(size, mat){
+      size = Number(size);
+      const row = STANDARD.find(r=>Number(r.s)===size);
+      if(!row || row[mat]==null) return null;
+      return Number(row[mat]);
+    }
+
+    function calc(){
+      const Rt = parseFloat($("Rt").value);
+      const t  = parseFloat($("temp").value);
+      const L  = parseFloat($("L").value);
+      const l  = parseFloat($("lExtra").value);
+      const matKey = $("material").value;
+      const k = kMap[matKey];
+      const size = parseFloat(csSel.value);
+
+      if([Rt,t,L,l,k,size].some(v=>isNaN(v))){
+        alert("กรุณากรอกให้ครบทุกช่อง");
+        return;
+      }
+      if(L + l <= 0){ alert("(L + l) ต้องมากกว่า 0"); return; }
+
+      // Step 1: temperature correction
+      const tempFactor = 1/(1 + k*(t-20));
+      const afterTemp  = Rt * tempFactor;
+
+      // Step 2: length normalize to 1 km
+      const r20 = afterTemp * (1000/(L+l));
+
+      // Render main result
+      $("r20Val").textContent = fmt(r20);
+      $("stepTemp").textContent = `Rt × 1/(1 + k (t − 20)) = ${fmt(Rt)} × ${fmt(tempFactor)} = ${fmt(afterTemp)}`;
+      $("stepLen").textContent  = `${fmt(afterTemp)} × 1000/(${fmt(L,0)} + ${fmt(l,0)}) = ${fmt(r20)}`;
+      $("result").style.display = "block";
+
+      // IEC compare
+      const limit = getStd(size, matKey);
+      const iec = $("iecBlock");
+      const passMsg = $("passMsg");
+      if(limit==null){
+        iec.style.display = "block";
+        $("iecSize").textContent = size;
+        $("iecMat").textContent = matKey;
+        $("iecLimit").textContent = "ไม่มีในตาราง";
+        $("iecPct").textContent = "-";
+        passMsg.innerHTML = `<span class="warn">ไม่มีค่ามาตรฐานสำหรับขนาด/วัสดุนี้</span>`;
+        return;
+      }
+
+      const pct = r20 * 100 / limit;
+      iec.style.display = "block";
+      $("iecSize").textContent = size;
+      $("iecMat").textContent = matKey;
+      $("iecLimit").textContent = fmt(limit, 4);
+      $("iecPct").innerHTML = `${fmt(pct,2)}%` + (pct<97? ' <span class="bad">(ต่ำกว่า 97%)</span>' : '');
+
+      // Pass/Fail: must be <= limit
+      if(r20 <= limit){
+        passMsg.innerHTML = `<strong class="ok">ผ่านมาตรฐาน</strong> (R20 ≤ ${fmt(limit,4)})`;
+      }else{
+        passMsg.innerHTML = `<strong class="bad">ไม่ผ่านมาตรฐาน</strong> (R20 > ${fmt(limit,4)})`;
+      }
+    }
+
+    $("calcBtn").addEventListener("click", calc);
+    $("resetBtn").addEventListener("click", ()=>{
+      ["Rt","temp","L","lExtra"].forEach(id=>$(id).value="");
+      $("material").selectedIndex=0; $("csArea").selectedIndex=0;
+      $("result").style.display="none";
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+
+    // iOS keyboard / scroll friendliness
+    // Avoid heavy listeners; compute only on button tap.
+  </script>
+</body>
+</html>
