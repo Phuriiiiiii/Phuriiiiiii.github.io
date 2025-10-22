@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>R20,Cu Calculator — Cable Resistance @20°C per km</title>
+  <meta name="description" content="เครื่องคิดเลข R20,Cu คำนวณค่าความต้านทานที่ 20°C ต่อความยาว 1 km จากค่าที่อุณหภูมิแวดล้อม พร้อมแสดงวิธีคำนวณ" />
+  <style>
+    :root{
+      --bg:#0f172a;      /* slate-900 */
+      --card:#111827;    /* gray-900 */
+      --muted:#9ca3af;   /* gray-400 */
+      --text:#e5e7eb;    /* gray-200 */
+      --accent:#22d3ee;  /* cyan-400 */
+      --ring:#38bdf8;    /* sky-400 */
+      --bad:#f87171;     /* red-400 */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 800px at 10% -10%, #1f2937 0, transparent 60%),
+                  radial-gradient(1200px 800px at 110% 10%, #0e7490 0, transparent 50%),
+                  var(--bg);
+      color:var(--text);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .app{width:100%; max-width:880px}
+    .title{font-size:clamp(20px,3.5vw,32px); font-weight:700; letter-spacing:.2px; margin:0 0 8px}
+    .subtitle{color:var(--muted); margin:0 0 20px; line-height:1.5}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px; padding:20px; backdrop-filter: blur(6px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .grid{display:grid; grid-template-columns:1fr; gap:14px}
+    @media (min-width:720px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    label{display:block; font-weight:600; margin-bottom:6px}
+    .hint{font-size:12px; color:var(--muted); margin-top:4px}
+    input, select{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:#0b1220; color:var(--text); outline:none; font-size:15px;
+    }
+    input:focus, select:focus{ border-color:var(--ring); box-shadow:0 0 0 4px rgba(56,189,248,.18) }
+    .row{display:grid; grid-template-columns:1fr; gap:14px}
+    @media (min-width:720px){ .row{grid-template-columns:2fr 1fr} }
+    .btn{
+      width:100%; padding:12px 16px; font-weight:700; border-radius:12px; border:1px solid rgba(255,255,255,.15);
+      background:linear-gradient(180deg, #06b6d4, #0891b2); color:#001018; cursor:pointer;
+    }
+    .btn:active{transform: translateY(1px)}
+    .danger{background:linear-gradient(180deg, #f87171, #ef4444); color:#2a0a0a}
+    .out{
+      margin-top:18px; padding:16px; border-radius:14px; border:1px dashed rgba(255,255,255,.18);
+      background:#0b1220;
+    }
+    .val{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+    details{
+      margin-top:14px; border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:12px; background:#0c1424;
+    }
+    summary{cursor:pointer; font-weight:700}
+    .muted{color:var(--muted)}
+    .footer{margin-top:10px; font-size:12px; color:var(--muted)}
+    .badge{display:inline-block; padding:4px 8px; border:1px solid rgba(255,255,255,.2); border-radius:999px; font-size:12px; margin-left:6px}
+    .two-col{display:grid; grid-template-columns:1fr; gap:12px}
+    @media (min-width:720px){ .two-col{grid-template-columns:1fr 1fr} }
+    .err{color:var(--bad); font-size:13px; margin-top:6px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1 class="title">R<sub>20,Cu</sub> Calculator <span class="badge">All-devices</span> <span class="badge">Pure HTML/JS</span></h1>
+    <p class="subtitle">
+      คำนวณค่าความต้านทานที่ <strong>20 °C</strong> ต่อความยาว <strong>1 km</strong> จากค่าที่วัดได้ที่อุณหภูมิแวดล้อม
+      พร้อมแสดงวิธีคำนวณทีละขั้น
+    </p>
+
+    <section class="card">
+      <div class="grid">
+        <div>
+          <label for="Rt">Rt — ค่าความต้านทานที่อุณหภูมิแวดล้อม (Ω)</label>
+          <input id="Rt" type="number" step="any" placeholder="เช่น 3.812" inputmode="decimal">
+          <div class="hint">ค่าที่วัดได้จริงของเส้นยาว <strong>(L+l)</strong> เมตร ณ อุณหภูมิ <strong>t</strong> °C</div>
+        </div>
+
+        <div>
+          <label for="temp">t — อุณหภูมิแวดล้อม (°C)</label>
+          <input id="temp" type="number" step="any" placeholder="เช่น 34" inputmode="decimal">
+        </div>
+
+        <div>
+          <label for="L">L — ความยาว (m)</label>
+          <input id="L" type="number" step="any" placeholder="เช่น 987" inputmode="decimal">
+        </div>
+
+        <div>
+          <label for="lExtra">l — ความยาวเผื่อ (m)</label>
+          <input id="lExtra" type="number" step="any" placeholder="เช่น 15" inputmode="decimal">
+        </div>
+
+        <div>
+          <label for="material">วัสดุตัวนำ (เลือกค่า k)</label>
+          <select id="material">
+            <option value="0.00393">Copper (k = 0.00393)</option>
+            <option value="0.00370">Tin-Coated Copper (k = 0.00370)</option>
+            <option value="0.00403">Aluminium (k = 0.00403)</option>
+          </select>
+          <div class="hint">Factor k จะนำไปใช้ในสมการปรับอุณหภูมิ</div>
+        </div>
+
+        <div>
+          <label for="decimals">ทศนิยมที่แสดงผล</label>
+          <input id="decimals" type="number" min="0" max="10" value="6">
+          <div class="hint">ใช้ควบคุมการปัดผลลัพธ์</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px">
+        <button class="btn" id="calcBtn">คำนวณ R<sub>20,Cu</sub></button>
+        <button class="btn danger" id="resetBtn" type="button">ล้างค่า</button>
+      </div>
+
+      <div id="error" class="err" role="alert" style="display:none"></div>
+
+      <div class="out" id="result" style="display:none">
+        <div><strong>ผลลัพธ์:</strong>
+          <div style="margin-top:6px; font-size:18px">
+            R<sub>20,Cu</sub> = <span class="val" id="r20Val">—</span> <span class="muted">Ω/km</span>
+          </div>
+        </div>
+
+        <details>
+          <summary>ดูวิธีคำนวณทีละขั้น</summary>
+          <div style="margin-top:12px; line-height:1.6">
+            <div>1) ปรับอุณหภูมิ: <span class="val">Rt × 1/(1 + k (t − 20))</span></div>
+            <div class="muted">= <span class="val" id="stepTemp">—</span> Ω</div>
+
+            <div style="margin-top:10px">2) ปรับความยาวเป็นต่อกิโลเมตร: <span class="val">× 1000/(L + l)</span></div>
+            <div class="muted">= <span class="val" id="stepLen">—</span></div>
+
+            <div style="margin-top:10px">สรุป: <span class="val" id="formulaEcho">R20,Cu = Rt × 1/(1 + k (t − 20)) × 1000/(L + l)</span></div>
+          </div>
+        </details>
+
+        <div class="footer">
+          หน่วยอินพุต: Rt เป็น Ω ของเส้นยาว (L+l) เมตรที่อุณหภูมิ t °C • เอาต์พุต: Ω/km
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function formatNumber(x, d){
+      if(!isFinite(x)) return "—";
+      return Number(x).toFixed(d);
+    }
+
+    function calc(){
+      const Rt = parseFloat($("Rt").value);
+      const t  = parseFloat($("temp").value);
+      const L  = parseFloat($("L").value);
+      const l  = parseFloat($("lExtra").value);
+      const k  = parseFloat($("material").value);
+      const decimals = Math.min(10, Math.max(0, parseInt($("decimals").value || "6", 10)));
+
+      const errBox = $("error");
+      errBox.style.display = "none";
+      errBox.textContent = "";
+
+      // ตรวจสอบค่าอินพุต
+      if([Rt,t,L,l,k].some(v => isNaN(v))){
+        errBox.style.display = "block";
+        errBox.textContent = "กรุณากรอกค่าตัวเลขให้ครบทุกช่อง";
+        $("result").style.display = "none";
+        return;
+      }
+      if(L + l <= 0){
+        errBox.style.display = "block";
+        errBox.textContent = "เงื่อนไขความยาวไม่ถูกต้อง: (L + l) ต้องมากกว่า 0 เมตร";
+        $("result").style.display = "none";
+        return;
+      }
+
+      // Step 1: ปรับอุณหภูมิ
+      const tempFactor = 1/(1 + k*(t - 20));
+      const afterTemp = Rt * tempFactor;
+
+      // Step 2: ปรับเป็นต่อกิโลเมตร
+      const lenScale = 1000/(L + l);
+      const r20 = afterTemp * lenScale;
+
+      // แสดงผล
+      $("r20Val").textContent  = formatNumber(r20, decimals);
+      $("stepTemp").textContent= `Rt × 1/(1 + k (t − 20)) = ${formatNumber(Rt,decimals)} × ${formatNumber(tempFactor,decimals)} = ${formatNumber(afterTemp,decimals)}`;
+      $("stepLen").textContent = `${formatNumber(afterTemp,decimals)} × 1000/(${formatNumber(L,0)} + ${formatNumber(l,0)}) = ${formatNumber(afterTemp,decimals)} × ${formatNumber(lenScale,decimals)} = ${formatNumber(r20,decimals)}`;
+      $("result").style.display = "block";
+    }
+
+    $("calcBtn").addEventListener("click", calc);
+    ["Rt","temp","L","lExtra","material","decimals"].forEach(id=>{
+      $(id).addEventListener("input", ()=>{ /* คิดสดแบบเรียลไทม์ถ้ากรอกครบ */
+        if(["Rt","temp","L","lExtra"].every(f=>$(f).value!=='')) calc();
+      });
+    });
+
+    $("resetBtn").addEventListener("click", ()=>{
+      ["Rt","temp","L","lExtra"].forEach(id=>$(id).value="");
+      $("material").selectedIndex = 0;
+      $("decimals").value = 6;
+      $("result").style.display = "none";
+      const errBox = $("error"); errBox.style.display = "none"; errBox.textContent="";
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+
+    // เติมตัวอย่างค่าให้ลองได้ทันที (ลบได้ตามต้องการ)
+    window.addEventListener("DOMContentLoaded", ()=>{
+      $("Rt").value = "3.812";
+      $("temp").value = "34";
+      $("L").value = "987";
+      $("lExtra").value = "15";
+      calc();
+    });
+  </script>
+</body>
+</html>
